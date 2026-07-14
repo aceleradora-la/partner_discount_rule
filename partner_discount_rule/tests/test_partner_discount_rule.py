@@ -175,6 +175,44 @@ class TestPartnerDiscountRule(TransactionCase):
         )
         self.assertEqual(line.discount, 0)
 
+    def test_min_qty(self):
+        """La regla con cantidad minima aplica solo desde esa cantidad."""
+        self._rule(discount=10, min_qty=10)
+        order = self.env["sale.order"].create({"partner_id": self.partner.id})
+        line = self.env["sale.order.line"].create(
+            {
+                "order_id": order.id,
+                "product_id": self.product.id,
+                "product_uom_qty": 5,
+            }
+        )
+        self.assertEqual(line.discount, 0)
+        line.product_uom_qty = 12
+        self.assertEqual(line.discount, 10)
+
+    def test_min_amount_reevaluates_all_lines(self):
+        """El monto minimo mira el total bruto del pedido, y al superarlo
+        todas las lineas (incluso las cargadas antes) reciben el descuento."""
+        # product: lista $100, product_other: lista $50
+        self._rule(discount=10, min_amount=1000)
+        order = self.env["sale.order"].create({"partner_id": self.partner.id})
+        line1 = self.env["sale.order.line"].create(
+            {
+                "order_id": order.id,
+                "product_id": self.product.id,
+                "product_uom_qty": 5,  # total pedido: 500 < 1000
+            }
+        )
+        self.assertEqual(line1.discount, 0)
+        self.env["sale.order.line"].create(
+            {
+                "order_id": order.id,
+                "product_id": self.product_other.id,
+                "product_uom_qty": 10,  # total pedido: 500 + 500 = 1000
+            }
+        )
+        self.assertEqual(line1.discount, 10, "la primera linea debe re-evaluarse")
+
     def test_discount_survives_confirmation(self):
         """Confirmar la orden no debe pisar el descuento de la regla."""
         self._rule(discount=25)

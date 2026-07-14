@@ -11,7 +11,7 @@ con vigencia opcional por fechas y modo de convivencia configurable con
 el descuento de la lista de precios (mayor beneficio, acumulado o
 sobreescribir).
 """,
-    "version": "18.0.1.1.1",
+    "version": "18.0.1.2.0",
     "category": "Sales/Sales",
     "author": "Aceleradora",
     "maintainer": "Aceleradora",

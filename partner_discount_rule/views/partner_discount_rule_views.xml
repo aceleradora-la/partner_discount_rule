@@ -13,6 +13,9 @@
                 <field name="applied_on"/>
                 <field name="discount"/>
                 <field name="combine_mode" optional="show"/>
+                <field name="currency_id" column_invisible="1"/>
+                <field name="min_qty" optional="hide"/>
+                <field name="min_amount" optional="hide"/>
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
@@ -59,6 +62,11 @@
                         <group string="Vigencia">
                             <field name="date_start"/>
                             <field name="date_end"/>
+                        </group>
+                        <group string="Condiciones">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="min_qty"/>
+                            <field name="min_amount"/>
                         </group>
                     </group>
                 </sheet>
