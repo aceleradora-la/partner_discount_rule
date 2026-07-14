@@ -74,10 +74,10 @@
                 <field name="partner_category_ids"/>
                 <filter name="filter_active" string="Vigentes hoy"
                         domain="['&amp;',
-                                 '|', ('date_start', '=', False), ('date_start', '&lt;=', context_today().strftime('%Y-%m-%d')),
-                                 '|', ('date_end', '=', False), ('date_end', '&gt;=', context_today().strftime('%Y-%m-%d'))]"/>
+                                 '|', ('date_start', '=', False), ('date_start', '&lt;=', 'today'),
+                                 '|', ('date_end', '=', False), ('date_end', '&gt;=', 'today')]"/>
                 <filter name="filter_archived" string="Archivadas" domain="[('active', '=', False)]"/>
-                <group expand="0" string="Agrupar por">
+                <group>
                     <filter name="groupby_applied_on" string="Aplicar sobre"
                             context="{'group_by': 'applied_on'}"/>
                 </group>
