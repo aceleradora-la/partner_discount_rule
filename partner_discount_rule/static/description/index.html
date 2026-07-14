@@ -1,0 +1,38 @@
+<section class="oe_container">
+    <div class="oe_row oe_spaced">
+        <div class="oe_span12">
+            <h2 class="oe_slogan">Reglas de Descuento por Cliente</h2>
+            <h3 class="oe_slogan">Descuentos automáticos por cliente, etiqueta o categoría, con vigencia por fechas</h3>
+        </div>
+        <div class="oe_span12">
+            <p class="oe_mt32">
+                Definí descuentos (%) para uno o varios clientes — o para una etiqueta
+                de cliente — aplicables a una variante de producto, un producto, una
+                categoría de producto (incluye sus hijas) o todos los productos,
+                dentro de un rango de fechas opcional.
+            </p>
+            <h4>Cómo aplica</h4>
+            <ul>
+                <li>Al elegir producto en una línea de presupuesto (borrador o enviado),
+                    se busca la regla vigente más específica: variante &gt; producto &gt;
+                    categoría &gt; global.</li>
+                <li>Ante empate gana la regla de menor secuencia.</li>
+                <li>El cliente matchea directo, por su contacto comercial padre o por etiqueta.</li>
+            </ul>
+            <h4>Convivencia con la lista de precios</h4>
+            <p>Cada regla configura cómo combinarse con el descuento que la tarifa
+               ya puso en la columna Descuento:</p>
+            <ul>
+                <li><b>Mayor beneficio al cliente</b>: aplica el mayor de los dos porcentajes.</li>
+                <li><b>Acumulado</b>: suma ambos porcentajes (tope 100%).</li>
+                <li><b>Sobreescribir</b>: la regla pisa el descuento de la tarifa.</li>
+            </ul>
+            <h4>Configuración</h4>
+            <p>Ventas &#8594; Configuración &#8594; Reglas de descuento
+               (grupo Administrador de ventas). Cada cliente muestra un botón
+               inteligente con las reglas que le aplican. Activá la opción
+               <b>Descuentos</b> en los ajustes de Ventas para ver la columna.</p>
+            <p class="text-muted">Desarrollado por <a href="https://aceleradora.la">Aceleradora</a>.</p>
+        </div>
+    </div>
+</section>
