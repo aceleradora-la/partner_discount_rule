@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+﻿from datetime import date, timedelta
 
 from odoo.exceptions import ValidationError
 from odoo.tests import TransactionCase, tagged
@@ -31,8 +31,26 @@ class TestPartnerDiscountRule(TransactionCase):
         cls.product_other = cls.env["product.product"].create(
             {"name": "Agua (test)", "categ_id": cls.categ_parent.id, "list_price": 50}
         )
+        # Tarifa propia sin items: los builds de staging corren sobre una
+        # copia de la base real, y la tarifa por defecto de esa base podria
+        # alterar precios o descuentos y romper las aserciones.
+        cls.pricelist = cls.env["product.pricelist"].create(
+            {
+                "name": "Tarifa test (sin items)",
+                "currency_id": cls.company.currency_id.id,
+            }
+        )
         cls.Rule = cls.env["partner.discount.rule"]
         cls.today = date.today()
+
+    @classmethod
+    def _order(cls, partner):
+        return cls.env["sale.order"].create(
+            {
+                "partner_id": partner.id,
+                "pricelist_id": cls.pricelist.id,
+            }
+        )
 
     def _rule(self, **vals):
         base = {
@@ -154,7 +172,7 @@ class TestPartnerDiscountRule(TransactionCase):
 
     def test_sale_order_line_gets_discount(self):
         self._rule(discount=15)
-        order = self.env["sale.order"].create({"partner_id": self.partner.id})
+        order = self._order(self.partner)
         line = self.env["sale.order.line"].create(
             {
                 "order_id": order.id,
@@ -165,7 +183,7 @@ class TestPartnerDiscountRule(TransactionCase):
         self.assertEqual(line.discount, 15)
 
     def test_sale_order_line_no_rule(self):
-        order = self.env["sale.order"].create({"partner_id": self.partner_other.id})
+        order = self._order(self.partner_other)
         line = self.env["sale.order.line"].create(
             {
                 "order_id": order.id,
@@ -178,7 +196,7 @@ class TestPartnerDiscountRule(TransactionCase):
     def test_min_qty(self):
         """La regla con cantidad minima aplica solo desde esa cantidad."""
         self._rule(discount=10, min_qty=10)
-        order = self.env["sale.order"].create({"partner_id": self.partner.id})
+        order = self._order(self.partner)
         line = self.env["sale.order.line"].create(
             {
                 "order_id": order.id,
@@ -195,7 +213,7 @@ class TestPartnerDiscountRule(TransactionCase):
         todas las lineas (incluso las cargadas antes) reciben el descuento."""
         # product: lista $100, product_other: lista $50
         self._rule(discount=10, min_amount=1000)
-        order = self.env["sale.order"].create({"partner_id": self.partner.id})
+        order = self._order(self.partner)
         line1 = self.env["sale.order.line"].create(
             {
                 "order_id": order.id,
@@ -216,7 +234,7 @@ class TestPartnerDiscountRule(TransactionCase):
     def test_discount_survives_confirmation(self):
         """Confirmar la orden no debe pisar el descuento de la regla."""
         self._rule(discount=25)
-        order = self.env["sale.order"].create({"partner_id": self.partner.id})
+        order = self._order(self.partner)
         line = self.env["sale.order.line"].create(
             {
                 "order_id": order.id,
@@ -227,3 +245,4 @@ class TestPartnerDiscountRule(TransactionCase):
         self.assertEqual(line.discount, 25)
         order.action_confirm()
         self.assertEqual(line.discount, 25)
+
