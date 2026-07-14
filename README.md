@@ -44,6 +44,19 @@ Esto solo aplica sobre la **columna descuento**: si la tarifa está configurada
 para incluir el descuento en el precio unitario (precio ya rebajado), la regla
 no lo detecta como descuento y el porcentaje se aplica sobre ese precio.
 
+## Condiciones adicionales
+
+Cada regla puede exigir además (0 = sin condición):
+
+- **Cantidad mínima**: la línea debe alcanzar esa cantidad (en la unidad de
+  medida de la línea), como la cantidad mínima de las listas de precios.
+- **Monto mínimo del pedido**: el total del pedido — sin impuestos y **antes
+  de descuentos** (precio × cantidad) — debe alcanzar ese monto, expresado en
+  la moneda de la compañía. Se usa el bruto para que el propio descuento no
+  desactive la condición. Al agregar o modificar cualquier línea se re-evalúan
+  los descuentos de todas las líneas del pedido, así las líneas cargadas antes
+  de alcanzar el monto también reciben el descuento.
+
 ## Configuración
 
 Menú **Ventas → Configuración → Reglas de descuento** (grupo *Administrador de

@@ -41,6 +41,20 @@ class PartnerDiscountRule(models.Model):
     date_start = fields.Date(string="Desde")
     date_end = fields.Date(string="Hasta")
 
+    # --- Condiciones ---
+    min_qty = fields.Float(
+        string="Cantidad mínima",
+        help="La regla aplica solo si la cantidad de la línea alcanza este "
+             "mínimo, en la unidad de medida de la línea. 0 = sin condición.",
+    )
+    currency_id = fields.Many2one(related="company_id.currency_id")
+    min_amount = fields.Monetary(
+        string="Monto mínimo del pedido",
+        currency_field="currency_id",
+        help="La regla aplica solo si el total del pedido (sin impuestos y "
+             "antes de descuentos) alcanza este monto. 0 = sin condición.",
+    )
+
     # --- Aplicabilidad: cliente ---
     partner_ids = fields.Many2many(
         "res.partner",
@@ -83,6 +97,14 @@ class PartnerDiscountRule(models.Model):
         for rule in self:
             if not (0.0 <= rule.discount <= 100.0):
                 raise ValidationError("El descuento debe estar entre 0 y 100.")
+
+    @api.constrains("min_qty", "min_amount")
+    def _check_minimums(self):
+        for rule in self:
+            if rule.min_qty < 0 or rule.min_amount < 0:
+                raise ValidationError(
+                    "La cantidad mínima y el monto mínimo no pueden ser negativos."
+                )
 
     @api.constrains("date_start", "date_end")
     def _check_dates(self):
@@ -151,8 +173,15 @@ class PartnerDiscountRule(models.Model):
         return 3  # global
 
     @api.model
-    def _get_applicable_rule(self, partner, product, date, company):
-        """Devuelve la regla ganadora o un recordset vacío."""
+    def _get_applicable_rule(self, partner, product, date, company,
+                             qty=0.0, order_amount=0.0):
+        """Devuelve la regla ganadora o un recordset vacío.
+
+        :param qty: cantidad de la línea (para reglas con cantidad mínima).
+        :param order_amount: total del pedido sin impuestos y antes de
+            descuentos, en la moneda de la compañía (para reglas con monto
+            mínimo).
+        """
         if not partner or not product:
             return self.browse()
 
@@ -166,6 +195,10 @@ class PartnerDiscountRule(models.Model):
 
         scored = []
         for rule in rules:
+            if rule.min_qty and qty < rule.min_qty:
+                continue
+            if rule.min_amount and order_amount < rule.min_amount:
+                continue
             if not rule._matches_partner(partner):
                 continue
             specificity = rule._matches_product(product)
