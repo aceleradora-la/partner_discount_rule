@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="res_partner_view_form_inherit_discount_rule" model="ir.ui.view">
+        <field name="name">res.partner.form.discount.rule</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//div[@name='button_box']" position="inside">
+                <button name="action_view_discount_rules"
+                        type="object"
+                        class="oe_stat_button"
+                        icon="fa-percent"
+                        groups="sales_team.group_sale_manager">
+                    <field name="discount_rule_count" widget="statinfo" string="Descuentos"/>
+                </button>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
