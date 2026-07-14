@@ -2,7 +2,7 @@
     "name": "Partner Discount Rules",
     "summary": "Descuentos por cliente / etiqueta / categoría de partner "
                "sobre producto o categoría de producto, con vigencia por fechas.",
-    "version": "18.0.1.0.0",
+    "version": "18.0.1.1.0",
     "category": "Sales/Sales",
     "author": "Aceleradora",
     "website": "https://aceleradora.la",

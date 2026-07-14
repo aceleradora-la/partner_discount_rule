@@ -23,6 +23,21 @@ class PartnerDiscountRule(models.Model):
         required=True,
         digits="Discount",
     )
+    combine_mode = fields.Selection(
+        [
+            ("best", "Mayor beneficio al cliente"),
+            ("sum", "Acumulado"),
+            ("override", "Sobreescribir"),
+        ],
+        string="Con descuento de tarifa",
+        default="override",
+        required=True,
+        help="Cómo combinar con el descuento que la lista de precios ya haya "
+             "puesto en la columna Descuento de la línea:\n"
+             "- Mayor beneficio al cliente: aplica el mayor de los dos.\n"
+             "- Acumulado: suma ambos porcentajes (tope 100%).\n"
+             "- Sobreescribir: la regla pisa el descuento de la tarifa.",
+    )
     date_start = fields.Date(string="Desde")
     date_end = fields.Date(string="Hasta")
 
@@ -96,6 +111,17 @@ class PartnerDiscountRule(models.Model):
     # ------------------------------------------------------------------
     # Resolución
     # ------------------------------------------------------------------
+    def _combine_discount(self, base_discount):
+        """Combina el descuento de la regla con el que ya tenga la línea
+        (típicamente el de la lista de precios), según combine_mode."""
+        self.ensure_one()
+        base_discount = base_discount or 0.0
+        if self.combine_mode == "best":
+            return max(base_discount, self.discount)
+        if self.combine_mode == "sum":
+            return min(100.0, base_discount + self.discount)
+        return self.discount
+
     def _matches_partner(self, partner):
         """El partner matchea por sí mismo, por su comercial_partner, o por etiqueta."""
         self.ensure_one()

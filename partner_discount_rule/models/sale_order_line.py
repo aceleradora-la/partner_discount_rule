@@ -27,4 +27,4 @@ class SaleOrderLine(models.Model):
                 order.company_id,
             )
             if rule:
-                line.discount = rule.discount
+                line.discount = rule._combine_discount(line.discount)

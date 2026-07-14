@@ -136,6 +136,22 @@ class TestPartnerDiscountRule(TransactionCase):
         with self.assertRaises(ValidationError):
             self._rule(partner_ids=False)
 
+    def test_combine_modes(self):
+        """Combinacion con el descuento ya presente en la linea (tarifa)."""
+        rule = self._rule(discount=15)
+        # override (default): pisa siempre
+        self.assertEqual(rule._combine_discount(10), 15)
+        self.assertEqual(rule._combine_discount(40), 15)
+        # best: gana el mayor
+        rule.combine_mode = "best"
+        self.assertEqual(rule._combine_discount(10), 15)
+        self.assertEqual(rule._combine_discount(40), 40)
+        # sum: acumula con tope 100
+        rule.combine_mode = "sum"
+        self.assertEqual(rule._combine_discount(10), 25)
+        rule.discount = 90
+        self.assertEqual(rule._combine_discount(20), 100)
+
     def test_sale_order_line_gets_discount(self):
         self._rule(discount=15)
         order = self.env["sale.order"].create({"partner_id": self.partner.id})
