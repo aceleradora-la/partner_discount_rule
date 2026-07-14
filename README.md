@@ -29,6 +29,21 @@ menor `id`. El descuento se escribe en el campo estándar `discount` de la líne
 por lo que conviene tener activada la opción **Descuentos** en Ajustes de Ventas
 para verlo en pantalla.
 
+## Convivencia con el descuento de la lista de precios
+
+Cada regla configura cómo combinarse con el descuento que la tarifa ya haya
+puesto en la columna Descuento (campo **Con descuento de tarifa**):
+
+| Modo                        | Comportamiento                                      |
+|-----------------------------|-----------------------------------------------------|
+| Mayor beneficio al cliente  | Aplica el mayor de los dos porcentajes              |
+| Acumulado                   | Suma ambos porcentajes (tope 100%)                  |
+| Sobreescribir (default)     | La regla pisa el descuento de la tarifa             |
+
+Esto solo aplica sobre la **columna descuento**: si la tarifa está configurada
+para incluir el descuento en el precio unitario (precio ya rebajado), la regla
+no lo detecta como descuento y el porcentaje se aplica sobre ese precio.
+
 ## Configuración
 
 Menú **Ventas → Configuración → Reglas de descuento** (grupo *Administrador de

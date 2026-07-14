@@ -12,6 +12,7 @@
                 <field name="partner_category_ids" widget="many2many_tags" optional="show"/>
                 <field name="applied_on"/>
                 <field name="discount"/>
+                <field name="combine_mode" optional="show"/>
                 <field name="date_start"/>
                 <field name="date_end"/>
                 <field name="company_id" groups="base.group_multi_company" optional="hide"/>
@@ -39,6 +40,7 @@
                         </group>
                         <group string="Descuento">
                             <field name="discount"/>
+                            <field name="combine_mode" widget="radio"/>
                             <field name="sequence"/>
                             <field name="company_id" groups="base.group_multi_company"/>
                         </group>
