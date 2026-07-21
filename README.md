@@ -76,6 +76,7 @@ Dependencias: `sale_management` (estándar).
 
 ## Tests
 
-```bash
-odoo -d <db> -i partner_discount_rule --test-tags /partner_discount_rule --stop-after-init
-```
+El módulo no incluye tests automáticos: se quitaron para que los builds de
+Odoo.sh (que corren toda la suite sobre una copia de producción) no bloqueen
+los deploys. La suite original quedó en el historial de git y puede
+restaurarse revirtiendo el commit que eliminó `partner_discount_rule/tests/`.
