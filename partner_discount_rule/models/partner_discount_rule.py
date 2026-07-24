@@ -84,11 +84,26 @@ class PartnerDiscountRule(models.Model):
         default="3_global",
         required=True,
     )
-    product_id = fields.Many2one("product.product", string="Variante")
-    product_tmpl_id = fields.Many2one("product.template", string="Producto")
-    categ_id = fields.Many2one(
+    product_ids = fields.Many2many(
+        "product.product",
+        "partner_discount_rule_product_rel",
+        "rule_id",
+        "product_id",
+        string="Variantes",
+    )
+    product_tmpl_ids = fields.Many2many(
+        "product.template",
+        "partner_discount_rule_tmpl_rel",
+        "rule_id",
+        "tmpl_id",
+        string="Productos",
+    )
+    categ_ids = fields.Many2many(
         "product.category",
-        string="Categoría de producto",
+        "partner_discount_rule_categ_rel",
+        "rule_id",
+        "categ_id",
+        string="Categorías de producto",
         help="Aplica también a las categorías hijas.",
     )
 
@@ -124,11 +139,11 @@ class PartnerDiscountRule(models.Model):
     @api.onchange("applied_on")
     def _onchange_applied_on(self):
         if self.applied_on != "0_product_variant":
-            self.product_id = False
+            self.product_ids = False
         if self.applied_on != "1_product":
-            self.product_tmpl_id = False
+            self.product_tmpl_ids = False
         if self.applied_on != "2_product_category":
-            self.categ_id = False
+            self.categ_ids = False
 
     # ------------------------------------------------------------------
     # Resolución
@@ -160,13 +175,13 @@ class PartnerDiscountRule(models.Model):
         """Devuelve el nivel de especificidad (menor = más específico) o None."""
         self.ensure_one()
         if self.applied_on == "0_product_variant":
-            return 0 if product == self.product_id else None
+            return 0 if product in self.product_ids else None
         if self.applied_on == "1_product":
-            return 1 if product.product_tmpl_id == self.product_tmpl_id else None
+            return 1 if product.product_tmpl_id in self.product_tmpl_ids else None
         if self.applied_on == "2_product_category":
             categ = product.categ_id
             while categ:
-                if categ == self.categ_id:
+                if categ in self.categ_ids:
                     return 2
                 categ = categ.parent_id
             return None
