@@ -11,3 +11,21 @@ class SaleOrderLine(models.Model):
             # de pesaje del producto. A la cotización aún no hay pesaje real.
             extra["weight"] = self.total_planned_weight
         return extra
+
+    def _get_weighed_invoice_vals(self, name=None):
+        """En la factura manda el peso REAL: si la regla que otorgó el
+        descuento exigía un mínimo en peso y lo entregado quedó por debajo,
+        el descuento se quita de la línea de factura. Si el pesaje se corrige
+        y vuelve a superar el mínimo (re-sync de factura borrador), el
+        descuento se restablece."""
+        vals = super()._get_weighed_invoice_vals(name=name)
+        rule = self.discount_rule_id.sudo()
+        if (
+            rule
+            and rule.min_qty
+            and rule.min_qty_mode == "weight"
+            and self.product_id.is_weighed_product
+        ):
+            below_min = self.total_delivered_weight < rule.min_qty
+            vals["discount"] = 0.0 if below_min else self.discount
+        return vals

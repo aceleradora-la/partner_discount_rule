@@ -73,6 +73,15 @@ Agrega a la regla el selector **"Cantidad mínima en"**:
   cargado su peso estándar. Para productos no pesables la regla sigue usando
   la cantidad de la línea.
 
+En la **factura** manda el peso real: si el peso entregado quedó por debajo
+del mínimo de la regla que otorgó el descuento, la línea de factura sale
+**sin descuento** (y si el pesaje se corrige en una factura borrador y vuelve
+a superar el mínimo, el descuento se restablece). Para eso el módulo base
+registra en cada línea de pedido la regla aplicada (campo
+`discount_rule_id`, también útil como trazabilidad); las líneas anteriores a
+esta versión no tienen regla registrada, así que sus facturas no se ven
+afectadas.
+
 ## Configuración
 
 Menú **Ventas → Configuración → Reglas de descuento** (grupo *Administrador de

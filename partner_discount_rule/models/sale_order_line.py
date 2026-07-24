@@ -4,6 +4,19 @@ from odoo import api, fields, models
 class SaleOrderLine(models.Model):
     _inherit = "sale.order.line"
 
+    # Campo simple (no compute almacenado, a propósito: un compute stored
+    # dispararía el recálculo masivo de descuentos históricos al actualizar
+    # el módulo). Se asigna dentro de _compute_discount; las líneas previas
+    # a esta versión quedan sin regla registrada.
+    discount_rule_id = fields.Many2one(
+        "partner.discount.rule",
+        string="Regla de descuento aplicada",
+        readonly=True,
+        copy=False,
+        help="Regla que determinó el descuento de la línea. Vacío si el "
+             "descuento vino de la tarifa o fue manual.",
+    )
+
     # No agregar order_id.date_order a los depends: action_confirm() reescribe
     # date_order y dispararia un recomputo al confirmar. Los depends sobre las
     # lineas hermanas (order_id.order_line.*) permiten que las reglas con
@@ -23,6 +36,7 @@ class SaleOrderLine(models.Model):
         rule_model = self.env["partner.discount.rule"].sudo()
         order_amounts = {}
         for line in self:
+            line.discount_rule_id = False
             if line.display_type or not line.product_id or not line.order_id.partner_id:
                 continue
             order = line.order_id
@@ -40,6 +54,7 @@ class SaleOrderLine(models.Model):
             )
             if rule:
                 line.discount = rule._combine_discount(line.discount)
+                line.discount_rule_id = rule.id
 
     def _discount_rule_extra(self):
         """Valores adicionales para la resolución de reglas. Los módulos
