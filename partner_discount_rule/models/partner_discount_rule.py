@@ -187,15 +187,24 @@ class PartnerDiscountRule(models.Model):
             return None
         return 3  # global
 
+    def _matches_min_qty(self, product, qty, extra):
+        """Hook extensible: ¿la cantidad de la línea cumple el mínimo de la
+        regla? Módulos puente (ej: pesaje) pueden redefinir la comparación."""
+        self.ensure_one()
+        return not self.min_qty or qty >= self.min_qty
+
     @api.model
     def _get_applicable_rule(self, partner, product, date, company,
-                             qty=0.0, order_amount=0.0):
+                             qty=0.0, order_amount=0.0, extra=None):
         """Devuelve la regla ganadora o un recordset vacío.
 
         :param qty: cantidad de la línea (para reglas con cantidad mínima).
         :param order_amount: total del pedido sin impuestos y antes de
             descuentos, en la moneda de la compañía (para reglas con monto
             mínimo).
+        :param extra: dict con valores adicionales que los módulos puente
+            pueden aportar desde la línea (ver sale.order.line
+            _discount_rule_extra).
         """
         if not partner or not product:
             return self.browse()
@@ -208,9 +217,10 @@ class PartnerDiscountRule(models.Model):
         ]
         rules = self.search(domain)
 
+        extra = extra or {}
         scored = []
         for rule in rules:
-            if rule.min_qty and qty < rule.min_qty:
+            if not rule._matches_min_qty(product, qty, extra):
                 continue
             if rule.min_amount and order_amount < rule.min_amount:
                 continue
