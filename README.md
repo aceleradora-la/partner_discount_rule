@@ -1,9 +1,9 @@
 # partner_discount_rule
 
 Reglas de descuento por cliente para Odoo. Permite definir descuentos (%) por
-**cliente** o **etiqueta de cliente**, aplicables a una **variante de producto**,
-un **producto**, una **categoría de producto** (incluye hijas) o **todos los
-productos**, con vigencia opcional por fechas.
+**cliente** o **etiqueta de cliente**, aplicables a una o varias **variantes de
+producto**, **productos**, **categorías de producto** (incluyen hijas) o
+**todos los productos**, con vigencia opcional por fechas.
 
 ## Ramas
 

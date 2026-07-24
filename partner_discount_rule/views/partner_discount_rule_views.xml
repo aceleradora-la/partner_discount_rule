@@ -49,13 +49,13 @@
                         </group>
                         <group string="Aplicabilidad">
                             <field name="applied_on"/>
-                            <field name="product_id"
+                            <field name="product_ids" widget="many2many_tags"
                                    invisible="applied_on != '0_product_variant'"
                                    required="applied_on == '0_product_variant'"/>
-                            <field name="product_tmpl_id"
+                            <field name="product_tmpl_ids" widget="many2many_tags"
                                    invisible="applied_on != '1_product'"
                                    required="applied_on == '1_product'"/>
-                            <field name="categ_id"
+                            <field name="categ_ids" widget="many2many_tags"
                                    invisible="applied_on != '2_product_category'"
                                    required="applied_on == '2_product_category'"/>
                         </group>
