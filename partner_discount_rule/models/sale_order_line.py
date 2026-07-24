@@ -36,9 +36,16 @@ class SaleOrderLine(models.Model):
                 order.company_id,
                 qty=line.product_uom_qty,
                 order_amount=order_amounts[order.id],
+                extra=line._discount_rule_extra(),
             )
             if rule:
                 line.discount = rule._combine_discount(line.discount)
+
+    def _discount_rule_extra(self):
+        """Valores adicionales para la resolución de reglas. Los módulos
+        puente lo extienden (ej: pesaje aporta el peso estimado)."""
+        self.ensure_one()
+        return {}
 
     @api.model
     def _get_order_gross_amount(self, order, date=None):

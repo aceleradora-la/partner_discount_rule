@@ -57,6 +57,22 @@ Cada regla puede exigir además (0 = sin condición):
   los descuentos de todas las líneas del pedido, así las líneas cargadas antes
   de alcanzar el monto también reciben el descuento.
 
+## Integración con productos pesables
+
+El repo incluye `partner_discount_rule_weighing`, un módulo puente que se
+instala **automáticamente** cuando `partner_discount_rule` y
+`sale_stock_weighing` están ambos instalados (un cliente sin pesaje no lo ve).
+Agrega a la regla el selector **"Cantidad mínima en"**:
+
+- *Cantidad de la línea* (default): el mínimo se compara contra las unidades
+  vendidas, como siempre.
+- *Peso*: para productos pesables el mínimo se compara contra el **peso
+  estimado** de la línea (piezas × peso estándar del producto), expresado en
+  la UdM de pesaje de cada producto (ej: kg). A la cotización aún no existe
+  el pesaje real, por eso se usa el estimado; requiere que el producto tenga
+  cargado su peso estándar. Para productos no pesables la regla sigue usando
+  la cantidad de la línea.
+
 ## Configuración
 
 Menú **Ventas → Configuración → Reglas de descuento** (grupo *Administrador de

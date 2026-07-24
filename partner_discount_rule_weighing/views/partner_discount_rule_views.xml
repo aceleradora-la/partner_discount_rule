@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="partner_discount_rule_view_form_weighing" model="ir.ui.view">
+        <field name="name">partner.discount.rule.form.weighing</field>
+        <field name="model">partner.discount.rule</field>
+        <field name="inherit_id" ref="partner_discount_rule.partner_discount_rule_view_form"/>
+        <field name="arch" type="xml">
+            <field name="min_qty" position="after">
+                <field name="min_qty_mode" widget="radio"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>
