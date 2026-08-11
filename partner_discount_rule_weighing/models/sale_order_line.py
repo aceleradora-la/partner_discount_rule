@@ -20,11 +20,14 @@ class SaleOrderLine(models.Model):
         descuento se restablece."""
         vals = super()._get_weighed_invoice_vals(name=name)
         rule = self.discount_rule_id.sudo()
+        # Si el usuario sobreescribió el descuento a mano, prima su valor: la
+        # validación por peso real no lo toca (coherente con el pedido).
         if (
             rule
             and rule.min_qty
             and rule.min_qty_mode == "weight"
             and self.product_id.is_weighed_product
+            and not self._discount_manually_overridden()
         ):
             below_min = self.total_delivered_weight < rule.min_qty
             vals["discount"] = 0.0 if below_min else self.discount
