@@ -29,11 +29,11 @@ menor `id`. El descuento se escribe en el campo estándar `discount` de la líne
 por lo que conviene tener activada la opción **Descuentos** en Ajustes de Ventas
 para verlo en pantalla.
 
-**Sobreescritura manual:** la regla se comporta como una regla de descuento de
-tarifa del estándar de Odoo: se recalcula en cada disparo (cambio de producto,
-cantidad, o de otra línea del pedido) y pisa el valor que hubiera. Un descuento
-tipeado a mano se mantiene sólo hasta el próximo recálculo, igual que en Odoo
-estándar. La línea registra la regla aplicada (`discount_rule_id`) para
+**Descuento manual vs. regla:** cuando una regla gobierna la línea, se recalcula
+en cada cambio (producto, cantidad, otras líneas) y pisa el valor, como una
+regla de descuento de tarifa del estándar. Pero un descuento **tipeado a mano en
+una línea sin regla no se borra**: se preserva aunque se toquen otras líneas del
+pedido. La línea registra la regla aplicada (`discount_rule_id`) para
 trazabilidad y para la validación por peso real en la factura.
 
 ## Convivencia con el descuento de la lista de precios
