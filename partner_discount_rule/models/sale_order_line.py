@@ -17,29 +17,23 @@ class SaleOrderLine(models.Model):
              "descuento vino de la tarifa o fue manual.",
     )
 
-    # No agregar order_id.date_order a los depends: action_confirm() reescribe
-    # date_order y dispararia un recomputo al confirmar. Los depends sobre las
-    # lineas hermanas (order_id.order_line.*) permiten que las reglas con
-    # monto minimo de pedido se re-evaluen en todas las lineas cuando
-    # cualquiera cambia.
+    # Depends acotado a la PROPIA linea, como el estandar de Odoo: asi un
+    # descuento tipeado a mano no se borra al tocar OTRAS lineas del pedido.
+    # Cambiar la cantidad o el producto de ESTA linea si dispara el recalculo
+    # y pisa el descuento (comportamiento estandar).
     #
-    # Cuando una REGLA gobierna la linea, se recalcula en cada disparo y pisa
-    # el valor (como una regla de descuento de tarifa del estandar). Pero un
-    # descuento tipeado a mano en una linea SIN regla no debe borrarse: sin la
-    # preservacion de abajo, los depends cruzados lo mandan a 0 con solo pasar
-    # a otra linea del pedido.
+    # Consecuencia: una regla por monto minimo del pedido se evalua cuando
+    # cambia esta linea (o al crearla) contra el total del momento, no cuando
+    # cambian otras lineas. Es el precio de respetar el descuento manual.
+    #
+    # No agregar order_id.date_order: action_confirm() lo reescribe y
+    # dispararia un recomputo al confirmar.
     @api.depends(
         "order_id.partner_id",
         "product_id",
         "product_uom_qty",
-        "order_id.order_line.product_uom_qty",
-        "order_id.order_line.price_unit",
     )
     def _compute_discount(self):
-        # Descuento y "tenia regla" previos a que super() los reescriba.
-        previous = {
-            line: (line.discount, bool(line.discount_rule_id)) for line in self
-        }
         super()._compute_discount()
         # sudo(): la resolucion de reglas no debe fallar para usuarios sin
         # permiso de lectura sobre partner.discount.rule (portal, website).
@@ -65,14 +59,6 @@ class SaleOrderLine(models.Model):
             if rule:
                 line.discount = rule._combine_discount(line.discount)
                 line.discount_rule_id = rule.id
-                continue
-            # Sin regla: preservar un descuento tipeado a mano que super() haya
-            # reseteado a 0. Solo si antes NO lo gobernaba una regla (un
-            # descuento que venia de una regla debe caer si la regla dejo de
-            # aplicar, no restablecerse).
-            prev_discount, had_rule = previous.get(line, (0.0, False))
-            if not had_rule and prev_discount and not line.discount:
-                line.discount = prev_discount
 
     def _discount_rule_extra(self):
         """Valores adicionales para la resolución de reglas. Los módulos
