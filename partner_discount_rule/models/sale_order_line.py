@@ -1,4 +1,5 @@
 from odoo import api, fields, models
+from odoo.tools import float_compare
 
 
 class SaleOrderLine(models.Model):
@@ -16,6 +17,23 @@ class SaleOrderLine(models.Model):
         help="Regla que determinó el descuento de la línea. Vacío si el "
              "descuento vino de la tarifa o fue manual.",
     )
+    rule_discount_applied = fields.Float(
+        string="Descuento aplicado por regla",
+        digits="Discount",
+        readonly=True,
+        copy=False,
+        help="Último % de descuento que escribió una regla en la línea. Si "
+             "el descuento vigente difiere de este valor, el usuario lo "
+             "sobreescribió a mano y su valor prima sobre la regla.",
+    )
+
+    def _discount_manually_overridden(self):
+        """El usuario sobreescribió el descuento que había puesto una regla."""
+        self.ensure_one()
+        prec = self.env["decimal.precision"].precision_get("Discount")
+        return bool(self.discount_rule_id) and float_compare(
+            self.discount, self.rule_discount_applied, precision_digits=prec
+        ) != 0
 
     # No agregar order_id.date_order a los depends: action_confirm() reescribe
     # date_order y dispararia un recomputo al confirmar. Los depends sobre las
@@ -30,14 +48,21 @@ class SaleOrderLine(models.Model):
         "order_id.order_line.price_unit",
     )
     def _compute_discount(self):
-        # Descuento y regla previos a que super() los reescriba. Sirve para
-        # no pisar un descuento tipeado a mano en una linea donde ninguna
-        # regla aplica: super() lo resetea al de la tarifa (0) y, si no lo
-        # repusieramos, el valor manual se perderia con solo tocar otra
-        # linea (los depends cruzados por el monto minimo disparan el
-        # recomputo de todas las lineas del pedido).
+        # Estado previo a que super() reescriba el descuento. Se usa para:
+        # 1) no pisar un descuento manual en una linea sin regla (super() lo
+        #    resetea a 0 y hay que reponerlo);
+        # 2) respetar la sobreescritura manual de un descuento de regla: si el
+        #    usuario cambio el valor que la regla habia puesto, prima el manual
+        #    hasta que cambie el producto (reset natural, como en Odoo).
+        empty_rule = self.env["partner.discount.rule"].browse()
         previous = {
-            line: (line.discount, bool(line.discount_rule_id)) for line in self
+            line: (
+                line.discount,
+                line.rule_discount_applied,
+                line.discount_rule_id or empty_rule,
+                line.product_id,
+            )
+            for line in self
         }
         super()._compute_discount()
         # sudo(): la resolucion de reglas no debe fallar para usuarios sin
@@ -45,9 +70,29 @@ class SaleOrderLine(models.Model):
         rule_model = self.env["partner.discount.rule"].sudo()
         order_amounts = {}
         for line in self:
+            prev_discount, prev_applied, prev_rule, prev_product = previous.get(
+                line, (0.0, 0.0, empty_rule, line.product_id)
+            )
             line.discount_rule_id = False
+            line.rule_discount_applied = 0.0
             if line.display_type or not line.product_id or not line.order_id.partner_id:
                 continue
+
+            # Sobreescritura manual: mientras no cambie el producto, si antes
+            # gobernaba una regla y el descuento vigente difiere del que la
+            # regla habia aplicado, el usuario lo cambio a mano -> prima.
+            if prev_product == line.product_id and prev_rule and float_compare(
+                prev_discount,
+                prev_applied,
+                precision_digits=self.env["decimal.precision"].precision_get(
+                    "Discount"
+                ),
+            ) != 0:
+                line.discount = prev_discount
+                line.discount_rule_id = prev_rule.id
+                line.rule_discount_applied = prev_applied
+                continue
+
             order = line.order_id
             date = order.date_order and order.date_order.date() or None
             if order.id not in order_amounts:
@@ -64,13 +109,13 @@ class SaleOrderLine(models.Model):
             if rule:
                 line.discount = rule._combine_discount(line.discount)
                 line.discount_rule_id = rule.id
+                line.rule_discount_applied = line.discount
                 continue
             # Sin regla: si el descuento anterior era manual (no lo puso una
             # regla) y super() lo dejo en cero, se restablece. Un descuento
             # que antes venia de una regla se deja como lo dejo super() —
             # corresponde que caiga si la regla ya no aplica.
-            prev_discount, had_rule = previous.get(line, (0.0, False))
-            if not had_rule and prev_discount and not line.discount:
+            if not prev_rule and prev_discount and not line.discount:
                 line.discount = prev_discount
 
     def _discount_rule_extra(self):
