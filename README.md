@@ -29,18 +29,15 @@ menor `id`. El descuento se escribe en el campo estándar `discount` de la líne
 por lo que conviene tener activada la opción **Descuentos** en Ajustes de Ventas
 para verlo en pantalla.
 
-**Descuento manual vs. regla:** el descuento se recalcula sólo cuando cambia la
-**propia línea** (producto o cantidad), igual que el estándar de Odoo. Cambiar
-la cantidad pisa el descuento con el de la regla (o lo deja en 0 si no hay
-regla). Pero **tipear un descuento a mano y pasar a otra línea no lo borra** —
-las otras líneas no disparan el recálculo de ésta. La línea registra la regla
-aplicada (`discount_rule_id`) para trazabilidad y para la validación por peso
-real en la factura.
-
-Por esto, una regla con **monto mínimo del pedido** se evalúa cuando cambia esa
-línea (o al crearla) contra el total del momento, no retroactivamente cuando
-cambian otras líneas — es el costo de respetar el descuento manual como el
-estándar.
+**Descuento manual vs. regla:** el descuento se recalcula ante cambios de
+**cantidad** (de esa línea o de cualquier otra del pedido) y de producto o
+cliente. Un cambio de cantidad —o agregar una línea— es un evento de "recalcular
+todo": la regla y el monto mínimo del pedido se re-evalúan en todas las líneas y
+pisan lo que hubiera, incluido un descuento manual. En cambio, **editar un
+descuento a mano no cambia ninguna cantidad, así que no se pierde**. Recomendación
+de uso: ajustar los descuentos a mano al final, después de fijar las cantidades.
+La línea registra la regla aplicada (`discount_rule_id`) para trazabilidad y para
+la validación por peso real en la factura.
 
 ## Convivencia con el descuento de la lista de precios
 

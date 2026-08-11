@@ -17,14 +17,18 @@ class SaleOrderLine(models.Model):
              "descuento vino de la tarifa o fue manual.",
     )
 
-    # Depends acotado a la PROPIA linea, como el estandar de Odoo: asi un
-    # descuento tipeado a mano no se borra al tocar OTRAS lineas del pedido.
-    # Cambiar la cantidad o el producto de ESTA linea si dispara el recalculo
-    # y pisa el descuento (comportamiento estandar).
+    # El descuento se recalcula ante cambios de CANTIDAD (de esta linea o de
+    # cualquier otra del pedido) y de producto/cliente. Un cambio de cantidad
+    # -o agregar una linea- es un evento de "recalcular todo": la regla (y el
+    # monto minimo del pedido) se re-evalua en todas las lineas y pisa lo que
+    # hubiera, incluido un descuento manual. En cambio, editar un descuento a
+    # mano no cambia ninguna cantidad, asi que no dispara recalculo y se
+    # conserva. Recomendacion de uso: ajustar descuentos a mano al final,
+    # despues de fijar las cantidades.
     #
-    # Consecuencia: una regla por monto minimo del pedido se evalua cuando
-    # cambia esta linea (o al crearla) contra el total del momento, no cuando
-    # cambian otras lineas. Es el precio de respetar el descuento manual.
+    # Se depende de las cantidades pero NO de price_unit: price_unit se
+    # recalcula solo (es computado) y dispararia recomputos fantasma que
+    # borrarian el descuento manual sin que el usuario toque nada.
     #
     # No agregar order_id.date_order: action_confirm() lo reescribe y
     # dispararia un recomputo al confirmar.
@@ -32,6 +36,7 @@ class SaleOrderLine(models.Model):
         "order_id.partner_id",
         "product_id",
         "product_uom_qty",
+        "order_id.order_line.product_uom_qty",
     )
     def _compute_discount(self):
         super()._compute_discount()
