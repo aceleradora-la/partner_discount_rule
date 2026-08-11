@@ -30,6 +30,15 @@ class SaleOrderLine(models.Model):
         "order_id.order_line.price_unit",
     )
     def _compute_discount(self):
+        # Descuento y regla previos a que super() los reescriba. Sirve para
+        # no pisar un descuento tipeado a mano en una linea donde ninguna
+        # regla aplica: super() lo resetea al de la tarifa (0) y, si no lo
+        # repusieramos, el valor manual se perderia con solo tocar otra
+        # linea (los depends cruzados por el monto minimo disparan el
+        # recomputo de todas las lineas del pedido).
+        previous = {
+            line: (line.discount, bool(line.discount_rule_id)) for line in self
+        }
         super()._compute_discount()
         # sudo(): la resolucion de reglas no debe fallar para usuarios sin
         # permiso de lectura sobre partner.discount.rule (portal, website).
@@ -55,6 +64,14 @@ class SaleOrderLine(models.Model):
             if rule:
                 line.discount = rule._combine_discount(line.discount)
                 line.discount_rule_id = rule.id
+                continue
+            # Sin regla: si el descuento anterior era manual (no lo puso una
+            # regla) y super() lo dejo en cero, se restablece. Un descuento
+            # que antes venia de una regla se deja como lo dejo super() —
+            # corresponde que caiga si la regla ya no aplica.
+            prev_discount, had_rule = previous.get(line, (0.0, False))
+            if not had_rule and prev_discount and not line.discount:
+                line.discount = prev_discount
 
     def _discount_rule_extra(self):
         """Valores adicionales para la resolución de reglas. Los módulos
