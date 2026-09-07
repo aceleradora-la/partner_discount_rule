@@ -10,7 +10,7 @@ Se instala automáticamente cuando ambos están presentes y permite que la
 cantidad mínima de una regla se interprete como peso (en la UdM de pesaje
 de cada producto) para los productos pesables.
 """,
-    "version": "19.0.1.3.0",
+    "version": "19.0.1.3.1",
     "pre_init_hook": "pre_init_hook",
     "category": "Sales/Sales",
     "author": "Aceleradora",
