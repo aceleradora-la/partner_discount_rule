@@ -31,13 +31,14 @@ para verlo en pantalla.
 
 **Descuento manual vs. regla:** el descuento se recalcula ante cambios de
 **cantidad** (de esa línea o de cualquier otra del pedido) y de producto o
-cliente. Un cambio de cantidad —o agregar una línea— es un evento de "recalcular
-todo": la regla y el monto mínimo del pedido se re-evalúan en todas las líneas y
-pisan lo que hubiera, incluido un descuento manual. En cambio, **editar un
-descuento a mano no cambia ninguna cantidad, así que no se pierde**. Recomendación
-de uso: ajustar los descuentos a mano al final, después de fijar las cantidades.
-La línea registra la regla aplicada (`discount_rule_id`) para trazabilidad y para
-la validación por peso real en la factura.
+cliente, para que el monto mínimo del pedido se re-evalúe. Cuando **una regla
+aplica**, la regla gobierna y pisa lo que hubiera (incluido un descuento manual);
+el flujo recomendado es ajustar los descuentos a mano al final, después de fijar
+las cantidades. Cuando **no aplica ninguna regla**, el módulo no toca el
+descuento: un valor tipeado a mano se conserva, así un cliente sin reglas se
+comporta como el estándar y no pierde sus descuentos manuales al moverse de línea
+o guardar. La línea registra la regla aplicada (`discount_rule_id`) para
+trazabilidad y para la validación por peso real en la factura.
 
 ## Convivencia con el descuento de la lista de precios
 

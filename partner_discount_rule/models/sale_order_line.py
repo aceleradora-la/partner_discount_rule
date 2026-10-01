@@ -18,13 +18,13 @@ class SaleOrderLine(models.Model):
     )
 
     # El descuento se recalcula ante cambios de CANTIDAD (de esta linea o de
-    # cualquier otra del pedido) y de producto/cliente. Un cambio de cantidad
-    # -o agregar una linea- es un evento de "recalcular todo": la regla (y el
-    # monto minimo del pedido) se re-evalua en todas las lineas y pisa lo que
-    # hubiera, incluido un descuento manual. En cambio, editar un descuento a
-    # mano no cambia ninguna cantidad, asi que no dispara recalculo y se
-    # conserva. Recomendacion de uso: ajustar descuentos a mano al final,
-    # despues de fijar las cantidades.
+    # cualquier otra del pedido) y de producto/cliente, para que el monto
+    # minimo del pedido se re-evalue. Cuando una REGLA aplica, la regla gobierna
+    # y pisa el valor (incluido un descuento manual). Cuando NO aplica ninguna
+    # regla, el modulo no toca el descuento: un valor tipeado a mano se conserva
+    # (super() lo pone en 0 si no hay descuento de tarifa, y aca se restablece).
+    # Asi, un cliente sin reglas se comporta como el estandar y no pierde sus
+    # descuentos manuales al moverse de linea o guardar.
     #
     # Se depende de las cantidades pero NO de price_unit: price_unit se
     # recalcula solo (es computado) y dispararia recomputos fantasma que
@@ -39,6 +39,10 @@ class SaleOrderLine(models.Model):
         "order_id.order_line.product_uom_qty",
     )
     def _compute_discount(self):
+        # Descuento y "tenia regla" previos a que super() los reescriba.
+        previous = {
+            line: (line.discount, bool(line.discount_rule_id)) for line in self
+        }
         super()._compute_discount()
         # sudo(): la resolucion de reglas no debe fallar para usuarios sin
         # permiso de lectura sobre partner.discount.rule (portal, website).
@@ -64,6 +68,14 @@ class SaleOrderLine(models.Model):
             if rule:
                 line.discount = rule._combine_discount(line.discount)
                 line.discount_rule_id = rule.id
+                continue
+            # Sin regla aplicable: preservar un descuento tipeado a mano que
+            # super() haya reseteado a 0. Solo si antes NO lo gobernaba una
+            # regla (un descuento que venia de una regla debe caer si la regla
+            # dejo de aplicar, no restablecerse).
+            prev_discount, had_rule = previous.get(line, (0.0, False))
+            if not had_rule and prev_discount and not line.discount:
+                line.discount = prev_discount
 
     def _discount_rule_extra(self):
         """Valores adicionales para la resolución de reglas. Los módulos
